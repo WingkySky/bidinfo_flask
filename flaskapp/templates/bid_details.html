@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tender.project_name }} - 招标详情{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">招标详情</h5>
+            <div>
+                {% if tender.website_url %}
+                <a href="{{ tender.website_url }}" target="_blank" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-link-45deg"></i> 查看原文
+                </a>
+                {% endif %}
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> 返回列表
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- 基本信息 -->
+                <div class="col-md-6 mb-3">
+                    <h6 class="border-bottom pb-2">基本信息</h6>
+                    <table class="table table-borderless">
+                        <tr>
+                            <th style="width: 120px">项目名称：</th>
+                            <td>{{ tender.project_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>项目编号：</th>
+                            <td>{{ tender.project_number or '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>项目类型：</th>
+                            <td>{{ tender.project_type or '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>招标阶段：</th>
+                            <td>{{ tender.bid_stage or '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>招标金额：</th>
+                            <td>{{ tender.bid_amount|format_amount if tender.bid_amount else '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>契合度：</th>
+                            <td>
+                                <span class="badge {{ tender.matching_degree|matching_degree_class }}">
+                                    {{ tender.matching_degree or '--' }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- 时间信息 -->
+                <div class="col-md-6 mb-3">
+                    <h6 class="border-bottom pb-2">时间信息</h6>
+                    <table class="table table-borderless">
+                        <tr>
+                            <th style="width: 120px">发布时间：</th>
+                            <td>{{ tender.publish_time.strftime('%Y-%m-%d') if tender.publish_time else '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>报名截止：</th>
+                            <td>{{ tender.registration_deadline.strftime('%Y-%m-%d') if tender.registration_deadline else '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>投标截止：</th>
+                            <td>{{ tender.bid_deadline.strftime('%Y-%m-%d') if tender.bid_deadline else '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>录入时间：</th>
+                            <td>{{ tender.entry_time.strftime('%Y-%m-%d %H:%M') if tender.entry_time else '--' }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- 单位信息 -->
+                <div class="col-md-6 mb-3">
+                    <h6 class="border-bottom pb-2">单位信息</h6>
+                    <table class="table table-borderless">
+                        <tr>
+                            <th style="width: 120px">招标单位：</th>
+                            <td>{{ tender.bidding_unit or '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>代理单位：</th>
+                            <td>{{ tender.agency_unit or '--' }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- 地区信息 -->
+                <div class="col-md-6 mb-3">
+                    <h6 class="border-bottom pb-2">地区信息</h6>
+                    <table class="table table-borderless">
+                        <tr>
+                            <th style="width: 120px">省份：</th>
+                            <td>{{ tender.province or '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>城市：</th>
+                            <td>{{ tender.city or '--' }}</td>
+                        </tr>
+                        <tr>
+                            <th>区县：</th>
+                            <td>{{ tender.district or '--' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

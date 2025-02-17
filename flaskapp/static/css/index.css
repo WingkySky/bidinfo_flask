@@ -1,0 +1,255 @@
+/* 容器样式 */
+.container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+/* 搜索面板 */
+.search-panel {
+    margin-bottom: 2rem;
+}
+
+.search-panel h2 {
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+}
+
+.search-form .form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.date-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.date-range input {
+    flex: 1;
+}
+
+.date-range span {
+    color: var(--secondary-color);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* 数据面板 */
+.data-panel {
+    background-color: #fff;
+    border-radius: 4px;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+}
+
+.total-count {
+    color: var(--secondary-color);
+}
+
+/* 表格样式 */
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    background-color: var(--bg-gray);
+    font-weight: 500;
+    color: var(--secondary-color);
+}
+
+tr:hover {
+    background-color: #fafafa;
+}
+
+/* 分页样式 */
+.pagination {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 1rem 0;
+    gap: 0.5rem;
+}
+
+.pagination button {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--border-color);
+    background-color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pagination button.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.pagination button:disabled {
+    background-color: #f5f5f5;
+    color: #d9d9d9;
+    cursor: not-allowed;
+}
+
+/* 对话框样式 */
+.dialog {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.dialog.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dialog-content {
+    background: white;
+    border-radius: 4px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.dialog-header {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dialog-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.close-dialog {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    color: #6c757d;
+}
+
+.dialog-body {
+    padding: 1rem;
+}
+
+/* 导入结果样式 */
+.import-result {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.import-result.success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.import-result.error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.result-summary p {
+    margin: 0.5rem 0;
+}
+
+.error-item {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.duplicate-item {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* 对比表格样式 */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.compare-table th,
+.compare-table td {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+.compare-table th {
+    background-color: #f8f9fa;
+    font-weight: 500;
+}
+
+.compare-result {
+    text-align: center;
+}
+
+.compare-result i {
+    font-size: 1.2rem;
+}
+
+.duplicate-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    font-weight: 500;
+}
+
+.duplicate-item {
+    margin-bottom: 2rem;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-danger {
+    color: #dc3545;
+} 

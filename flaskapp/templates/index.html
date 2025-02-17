@@ -1,0 +1,566 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 招标信息管理系统{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="search-panel">
+        <h2>招标信息查询</h2>
+        <form id="searchForm" class="search-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="project_name">项目名称</label>
+                    <input type="text" id="project_name" name="project_name">
+                </div>
+                <div class="form-group">
+                    <label for="bid_stage">招标阶段</label>
+                    <select id="bid_stage" name="bid_stage">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="project_type">项目类型</label>
+                    <select id="project_type" name="project_type">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="province">省份</label>
+                    <select id="province" name="province">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="city">城市</label>
+                    <select id="city" name="city">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="matching_degree">契合度</label>
+                    <select id="matching_degree" name="matching_degree">
+                        <option value="">全部</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>发布时间</label>
+                    <div class="date-range">
+                        <input type="date" id="publish_time_start" name="publish_time_start">
+                        <span>至</span>
+                        <input type="date" id="publish_time_end" name="publish_time_end">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>投标截止时间</label>
+                    <div class="date-range">
+                        <input type="date" id="bid_deadline_start" name="bid_deadline_start">
+                        <span>至</span>
+                        <input type="date" id="bid_deadline_end" name="bid_deadline_end">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">查询</button>
+                <button type="reset" class="btn btn-secondary">重置</button>
+                {% if is_admin %}
+                <button type="button" class="btn btn-success" id="btnImport">
+                    <i class="bi bi-file-earmark-arrow-up"></i> 导入数据
+                </button>
+                {% endif %}
+                <button type="button" class="btn btn-info" id="btnExport">
+                    <i class="bi bi-file-earmark-excel"></i> 导出数据
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="data-panel">
+        <div class="table-header">
+            <div class="total-count">共 <span id="totalCount">0</span> 条数据</div>
+            {% if is_admin %}
+            <div class="batch-actions">
+                <button type="button" id="btnBatchDelete" class="btn-danger" disabled>批量删除</button>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th style="width: 5%">
+                            <div class="form-check d-flex align-items-center">
+                                <input class="form-check-input" type="checkbox" id="selectAll" onclick="toggleAllRows()">
+                                <label class="form-check-label ms-2 small text-muted" for="selectAll">全选</label>
+                            </div>
+                        </th>
+                        <th style="width: 22%">项目名称</th>
+                        <th style="width: 10%">发布时间</th>
+                        <th style="width: 10%">截止时间</th>
+                        <th style="width: 8%">招标阶段</th>
+                        <th style="width: 10%">招标金额</th>
+                        <th style="width: 18%">招标单位</th>
+                        <th style="width: 8%">项目类型</th>
+                        <th style="width: 6%">契合度</th>
+                        <th style="width: 8%">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 数据行将通过JavaScript动态添加 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <!-- 分页控件将通过JavaScript动态添加 -->
+        </div>
+    </div>
+</div>
+
+<!-- 导入数据模态框 -->
+<div class="modal fade" id="importModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">数据导入</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 导入结果显示区域 -->
+                <div id="importResult" class="d-none">
+                    <div class="alert alert-info">
+                        <h6>导入结果统计：</h6>
+                        <p class="mb-1">总记录数：<span id="totalCount">0</span></p>
+                        <p class="mb-1">成功导入：<span id="successCount">0</span></p>
+                        <p class="mb-1">重复记录：<span id="duplicateCount">0</span></p>
+                        <p class="mb-1">错误记录：<span id="errorCount">0</span></p>
+                    </div>
+                    
+                    <!-- 修改错误详情表格 -->
+                    <div id="errorDetails" class="d-none mt-3">
+                        <h6 class="mb-3">错误详情：</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 80px">行号</th>
+                                        <th style="min-width: 200px">错误原因</th>
+                                        <th>项目名称</th>
+                                        <th>项目编号</th>
+                                        <th>发布时间</th>
+                                        <th>招标金额</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="errorList">
+                                    <!-- 动态填充错误数据 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 提示消息容器 -->
+                <div id="alertContainer"></div>
+                
+                <!-- 上传表单 -->
+                <form id="importForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">选择Excel文件</label>
+                        <input type="file" class="form-control" name="file" 
+                               accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                               required>
+                        <div class="form-text">支持.xls和.xlsx格式，请确保文件包含必要的列：项目名称、发布时间、投标截止时间、招标阶段、招标金额、招标单位等</div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary" id="uploadBtn">上传</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加重复数据对比模态框 -->
+<div class="modal fade" id="duplicateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">重复数据对比</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>对比项</th>
+                                <th>新数据</th>
+                                <th>已存在数据</th>
+                                <th>是否相同</th>
+                            </tr>
+                        </thead>
+                        <tbody id="duplicateTableBody">
+                            <!-- 动态填充重复数据 -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="showNextDuplicate()">
+                        下一条 <span id="duplicateCounter"></span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentDuplicateIndex = 0;
+    let duplicateRecords = [];
+
+    // 初始化模态框
+    const importModal = new bootstrap.Modal(document.getElementById('importModal'));
+    const duplicateModal = new bootstrap.Modal(document.getElementById('duplicateModal'));
+
+    // 处理导入表单提交
+    document.getElementById('importForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const fileInput = this.querySelector('input[type="file"]');
+        const submitBtn = this.querySelector('button[type="submit"]');
+        
+        if (!fileInput.files[0]) {
+            showAlert('请先选择Excel文件', 'danger');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> 上传中...';
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        fetch('/api/import', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // 更新导入结果显示
+            updateImportResult(data);
+            
+            // 如果有重复数据，显示对比模态框
+            if (data.duplicate_records && data.duplicate_records.length > 0) {
+                // 隐藏导入模态框
+                importModal.hide();
+                // 显示重复数据对比模态框
+                showDuplicateComparison(data.duplicate_records);
+            }
+            
+            // 显示成功消息
+            showAlert(`导入完成：
+                总记录数：${data.total}
+                成功导入：${data.success_count}
+                重复记录：${data.duplicate_count}
+                错误记录：${data.error_count}
+            `, 'success');
+            
+            // 重新加载数据表格
+            loadData();
+        })
+        .catch(error => {
+            showAlert(`导入失败: ${error.message}`, 'danger');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '上传';
+            fileInput.value = '';  // 清空文件输入
+        });
+    });
+
+    // 显示重复数据对比
+    function showDuplicateComparison(records) {
+        duplicateRecords = records;
+        currentDuplicateIndex = 0;
+        
+        document.querySelector('#duplicateModal .modal-title').textContent = 
+            `重复数据对比（共${records.length}条）`;
+        
+        showDuplicateRecord(0);
+        duplicateModal.show();
+    }
+
+    function showDuplicateRecord(index) {
+        if (index >= duplicateRecords.length) return;
+        
+        const record = duplicateRecords[index];
+        const tbody = document.getElementById('duplicateTableBody');
+        tbody.innerHTML = '';
+        
+        // 定义要对比的字段
+        const fields = [
+            { key: 'project_name', label: '项目名称' },
+            { key: 'project_number', label: '项目编号' },
+            { key: 'publish_time', label: '发布时间' },
+            { key: 'bid_stage', label: '招标阶段' },
+            { key: 'bidding_unit', label: '招标单位' },
+            { key: 'bid_deadline', label: '投标截止时间' },
+            { key: 'bid_amount', label: '招标金额' },
+            { key: 'agency_unit', label: '代理单位' }
+        ];
+        
+        fields.forEach(field => {
+            const newValue = record.new_record[field.key];
+            const existingValue = record.existing_record[field.key];
+            const isEqual = String(newValue) === String(existingValue);
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${field.label}</td>
+                <td>${formatValue(newValue)}</td>
+                <td>${formatValue(existingValue)}</td>
+                <td class="text-center">
+                    <i class="bi ${isEqual ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}"></i>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        document.getElementById('duplicateCounter').textContent = 
+            `(${index + 1}/${duplicateRecords.length})`;
+    }
+
+    function showNextDuplicate() {
+        currentDuplicateIndex = (currentDuplicateIndex + 1) % duplicateRecords.length;
+        showDuplicateRecord(currentDuplicateIndex);
+    }
+
+    function formatValue(value) {
+        if (value === null || value === undefined || value === '') {
+            return '--';
+        }
+        if (typeof value === 'string' && value.includes('T')) {
+            // 处理日期时间格式
+            return value.split('T')[0];
+        }
+        return value;
+    }
+
+    // 更新导入结果显示
+    function updateImportResult(data) {
+        const resultDiv = document.getElementById('importResult');
+        resultDiv.classList.remove('d-none');
+        
+        // 更新统计数据
+        document.getElementById('totalCount').textContent = data.total;
+        document.getElementById('successCount').textContent = data.success_count;
+        document.getElementById('duplicateCount').textContent = data.duplicate_count;
+        document.getElementById('errorCount').textContent = data.error_count;
+        
+        // 显示错误详情
+        const errorDetails = document.getElementById('errorDetails');
+        const errorList = document.getElementById('errorList');
+        if (data.error_details && data.error_details.length > 0) {
+            errorList.innerHTML = data.error_details.map(error => `
+                <tr>
+                    <td>${error.row_number}</td>
+                    <td class="text-danger">${error.error_message}</td>
+                    <td>${error.data.project_name}</td>
+                    <td>${error.data.project_number}</td>
+                    <td>${error.data.publish_time}</td>
+                    <td>${error.data.bid_amount}</td>
+                </tr>
+            `).join('');
+            errorDetails.classList.remove('d-none');
+        } else {
+            errorDetails.classList.add('d-none');
+        }
+    }
+
+    // 显示提示消息
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <div style="white-space: pre-line;">${message}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        alertContainer.innerHTML = '';
+        alertContainer.appendChild(alertDiv);
+    }
+
+    // 添加导入按钮点击事件
+    document.getElementById('btnImport').addEventListener('click', function() {
+        importModal.show();
+    });
+
+    // 监听模态框关闭事件
+    document.getElementById('importModal').addEventListener('hidden.bs.modal', function() {
+        // 重置表单和结果显示
+        document.getElementById('importForm').reset();
+        document.getElementById('importResult').classList.add('d-none');
+        document.getElementById('alertContainer').innerHTML = '';
+    });
+
+    document.getElementById('duplicateModal').addEventListener('hidden.bs.modal', function() {
+        // 如果导入模态框还有结果显示，重新显示导入模态框
+        if (!document.getElementById('importResult').classList.contains('d-none')) {
+            importModal.show();
+        }
+    });
+
+    // 暴露给全局的函数
+    window.showNextDuplicate = showNextDuplicate;
+
+    // 修改导出数据函数
+    function exportData() {
+        const selectedRows = getSelectedRows();
+        const form = document.getElementById('searchForm');
+        const formData = new FormData(form);
+        const searchParams = new URLSearchParams();
+        
+        // 获取当前筛选条件
+        for (let [key, value] of formData.entries()) {
+            if (value) searchParams.append(key, value);
+        }
+
+        // 获取当前筛选条件下的总数
+        fetch(`/api/bids/count?${searchParams.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                const totalFilteredCount = data.total;
+                
+                // 创建导出选项对话框
+                const modalHtml = `
+                    <div class="modal fade" id="exportModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">导出数据</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ${selectedRows.length > 0 ? `
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="radio" name="exportScope" id="exportSelected" value="selected" checked>
+                                            <label class="form-check-label" for="exportSelected">
+                                                导出选中数据（${selectedRows.length} 条记录）
+                                            </label>
+                                        </div>
+                                    ` : ''}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="exportScope" id="exportAll" value="all" 
+                                            ${selectedRows.length === 0 ? 'checked' : ''}>
+                                        <label class="form-check-label" for="exportAll">
+                                            导出筛选数据（${totalFilteredCount} 条记录）
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                    <button type="button" class="btn btn-primary" onclick="executeExport()">确认导出</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 移除已存在的模态框
+                const existingModal = document.getElementById('exportModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                // 添加模态框到页面
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('exportModal'));
+                modal.show();
+
+                // 定义导出执行函数
+                window.executeExport = function() {
+                    const exportScope = document.querySelector('input[name="exportScope"]:checked').value;
+                    
+                    if (exportScope === 'selected' && selectedRows.length > 0) {
+                        // 导出选中的数据
+                        exportSelectedData(selectedRows);
+                    } else {
+                        // 导出所有筛选数据
+                        exportFilteredData(searchParams);
+                    }
+                    
+                    // 关闭模态框
+                    modal.hide();
+                };
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('获取数据总数失败', 'danger');
+            });
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}
+
+<style>
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 0.35em 0.65em;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table td.text-wrap {
+    white-space: normal;
+    word-break: break-word;
+    min-width: 200px;
+    max-width: 300px;
+    line-height: 1.4;
+    padding: 10px 8px;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+#dataTable {
+    width: 100%;
+    min-width: 1200px;
+}
+</style> 
